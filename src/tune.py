@@ -8,7 +8,7 @@ from lightning.pytorch.tuner import Tuner
 from cli_module.tune import TuneCLI
 
 
-import datasets
+import dataset
 import nets
 import models
 import transforms
