@@ -1,0 +1,1 @@
+python3 -u src/main.py predict -c logs/tresnet_xl-pmd-aug-1/v4/fit/config.yaml --ckpt_path logs/tresnet_xl-pmd-aug-1/v4/fit/checkpoints/last.ckpt $@

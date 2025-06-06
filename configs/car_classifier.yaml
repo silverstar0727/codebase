@@ -1,0 +1,65 @@
+# Model configs
+model:
+  class_path: models.car_classifier.CarClassifier
+  init_args:
+    net:
+      class_path: nets.tresnet.TResNetL
+      init_args:
+        num_classes: ???  # Will be set dynamically
+        pretrained: true
+    margin_init: 0.5
+    margin_final: 0.1
+    learning_rate: 0.0001
+    weight_decay: 0.0001
+    vis_per_batch: 4
+
+# Data configs
+data:
+  class_path: datasets.car_dataset.CarDataModule
+  init_args:
+    root: data/car_data  # Update with your actual path
+    batch_size: 32
+    transforms:
+      class_path: transforms.car_transforms.CarTransforms
+    num_workers: 4
+
+# Trainer configs
+trainer:
+  max_epochs: 30
+  accelerator: auto
+  devices: auto
+  precision: 16-mixed
+  log_every_n_steps: 10
+  deterministic: true
+  
+  # Logger config
+  logger:
+    class_path: lightning.pytorch.loggers.WandbLogger
+    init_args:
+      project: car-classification
+      name: tresnet-pmd
+      save_dir: logs
+      log_model: true
+      
+  # Callbacks
+  callbacks:
+    # Early stopping
+    - class_path: lightning.pytorch.callbacks.EarlyStopping
+      init_args:
+        monitor: val/acc
+        patience: 5
+        mode: max
+
+    # Model checkpoint
+    - class_path: lightning.pytorch.callbacks.ModelCheckpoint
+      init_args:
+        monitor: val/acc
+        filename: "tresnet-epoch{epoch:02d}-val_acc{val/acc:.4f}"
+        save_top_k: 3
+        mode: max
+        save_last: true
+        
+    # Learning rate monitor
+    - class_path: lightning.pytorch.callbacks.LearningRateMonitor
+      init_args:
+        logging_interval: epoch

@@ -1,0 +1,76 @@
+# lightning.pytorch==2.0.0
+name: 391-fold1
+version: v1
+
+seed_everything: 42
+trainer:
+  accelerator: auto
+  precision: 16-mixed
+  max_epochs: 300
+  # deterministic: true
+  deterministic: false
+  benchmark: true  # CUDA 벤치마킹 활성화로 성능 향상
+  plugins:
+    - AsyncCheckpointIO
+  callbacks:
+    - class_path: WandbAlert
+      init_args:
+        monitor: ${model_ckpt.monitor}
+        mode: ${model_ckpt.mode}
+
+model:
+  class_path: models.CarClassifier
+  init_args:
+    net:
+      class_path: nets.timm.TimmModel
+      init_args:
+        model_name: tresnet_xl
+        num_classes: 391
+        img_size: 448
+        pretrained: true
+    loss_fn:
+      class_path: losses.ProgressiveMarginDecayingLoss
+      init_args:
+        margin_init: 0.5
+        margin_final: 0.1
+        num_epochs: 300
+    learning_rate: 0.0001
+    weight_decay: 0.0001
+    max_wrong_samples_per_epoch: 120
+
+data:
+  class_path: datasets.CarDataModule
+  init_args:
+    root: datasets
+    batch_size: 128
+    transforms:
+      class_path: transforms.CarTransforms
+      init_args:
+        img_size: 448
+    num_workers: 8
+
+# optimizer:
+#   class_path: SGD
+#   init_args:
+#     lr: 0.1
+#     momentum: 0.9
+#     weight_decay: 5e-4
+
+lr_scheduler:
+  class_path: LinearWarmupCosineAnnealingLR
+  init_args:
+    warmup_epochs: 20
+    max_epochs: ${trainer.max_epochs}
+
+early_stopping:
+  monitor: val/acc
+  patience: 1000
+  mode: max
+
+model_ckpt:
+  # dirpath: "gs://ecstatic-kirch-iqa-dacon"
+  monitor: val/acc
+  mode: max
+  filename: "best-ep={epoch:02d}-val_acc={val/acc:.4f}"
+  auto_insert_metric_name: false
+# ckpt_path: logs/debug-resume/version_0/fit/checkpoints/last.ckpt
