@@ -104,12 +104,12 @@ class CarClassifier(L.LightningModule):
         acc = self.val_accuracy(preds, labels)
         
         # 예측 결과 및 이미지 저장 (confusion matrix와 틀린 샘플 로깅을 위해)
-        self.val_predictions.extend(preds.cpu().numpy())
-        self.val_references.extend(labels.cpu().numpy())
+        # self.val_predictions.extend(preds.cpu().numpy())
+        # self.val_references.extend(labels.cpu().numpy())
         
-        # 이미지를 CPU로 이동하여 저장 (메모리 효율을 위해 필요한 만큼만)
-        if self.is_wandb:
-            self.val_images.extend([img_tensor.cpu().clone() for img_tensor in img])
+        # # 이미지를 CPU로 이동하여 저장 (메모리 효율을 위해 필요한 만큼만)
+        # if self.is_wandb:
+        #     self.val_images.extend([img_tensor.cpu().clone() for img_tensor in img])
         
         # 로깅
         self.log_dict(
@@ -236,21 +236,21 @@ class CarClassifier(L.LightningModule):
                 f"val/wrong_predictions": table
             })
         
-    @rank_zero_only
-    def on_validation_epoch_end(self) -> None:
-        # 틀린 예측 W&B 로깅
-        if self.is_wandb and len(self.val_predictions) > 0:
-            self.log_wrong_predictions_to_wandb()
+    # @rank_zero_only
+    # def on_validation_epoch_end(self) -> None:
+    #     # 틀린 예측 W&B 로깅
+    #     if self.is_wandb and len(self.val_predictions) > 0:
+    #         self.log_wrong_predictions_to_wandb()
         
-        # Confusion Matrix 생성 및 로깅
-        if len(self.val_predictions) > 0:
-            self.log_confusion_matrix()
+    #     # Confusion Matrix 생성 및 로깅
+    #     if len(self.val_predictions) > 0:
+    #         self.log_confusion_matrix()
         
-        # 메모리 정리
-        if hasattr(self, 'val_images'):
-            del self.val_images
-        self.val_predictions.clear()
-        self.val_references.clear()
+    #     # 메모리 정리
+    #     if hasattr(self, 'val_images'):
+    #         del self.val_images
+    #     self.val_predictions.clear()
+    #     self.val_references.clear()
     
     def log_confusion_matrix(self):
         """상위 20개 혼동 클래스에 대한 Confusion Matrix를 생성하고 W&B에 로깅"""

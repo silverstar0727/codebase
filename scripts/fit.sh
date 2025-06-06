@@ -1,1 +1,1 @@
-python3 -u src/main.py fit -c configs/config.yaml $@
+CUDA_VISIBLE_DEVICES=0 python3 -u src/main.py fit -c configs/config.yaml $@
